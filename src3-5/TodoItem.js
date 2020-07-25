@@ -12,20 +12,19 @@ class TodoItem extends Component {
   }
 
   render() {
-    const { content } = this.props
+
     return (
       <li
         onClick={ this.handleClick }
       >
-        { content }
+        { this.props.content }
       </li>
     )
   }
 
   handleClick() {
-    const { index, deleteItem } = this.props
-    console.log('父组件传递index: ', index)
-    deleteItem(index)
+    console.log('父组件传递index: ', this.props.index)
+    this.props.deleteItem(this.props.index)
   }
 
 }

@@ -3,7 +3,6 @@
  * @创建时间 2020/7/25 8:37 上午
  */
 import React, { Component } from 'react'
-import PropTypes from 'prop-types'
 
 class TodoItem extends Component {
 
@@ -13,12 +12,12 @@ class TodoItem extends Component {
   }
 
   render() {
-    const { content, text } = this.props
+    const { content } = this.props
     return (
       <li
         onClick={ this.handleClick }
       >
-        { text } - { content }
+        { content }
       </li>
     )
   }
@@ -29,17 +28,6 @@ class TodoItem extends Component {
     deleteItem(index)
   }
 
-}
-
-TodoItem.propTypes = {
-  text: PropTypes.string.isRequired,
-  content: PropTypes.string,
-  index: PropTypes.number,
-  deleteItem: PropTypes.func,
-}
-
-TodoItem.defaultProps = {
-  text: 'text',
 }
 
 export default TodoItem

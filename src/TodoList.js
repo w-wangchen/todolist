@@ -11,7 +11,7 @@ class TodoList extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      inputValue: 'hello world',
+      inputValue: '',
       list: [],
     }
     this.handleInputChange = this.handleInputChange.bind(this)
@@ -29,10 +29,11 @@ class TodoList extends Component {
                  value={ this.state.inputValue }
                  onChange={ this.handleInputChange }
                  className={ 'input' }
+                 ref={ (input) => this.input = input }
           />
           <button onClick={ this.handleBtnClick }>提交</button>
         </div>
-        <ul>
+        <ul ref={(ul)=>this.ul = ul}>
           { this.getTodoItem() }
         </ul>
       </Fragment>
@@ -53,12 +54,14 @@ class TodoList extends Component {
 
 
   handleInputChange(e) {
-    const value = e.target.value
-    this.setState(() => {
-      return {
-        inputValue: value,
-      }
-    })
+    // const value = e.target.value
+
+    // console.log(e.target)// DOM元素 INPUT
+    // console.log('this.input: ', this.input)// DOM元素INPUT
+    const value = this.input.value
+    this.setState(() => ({
+      inputValue: value,
+    }))
   }
 
   handleBtnClick() {
@@ -67,7 +70,11 @@ class TodoList extends Component {
         list: [...prevState.list, prevState.inputValue],
         inputValue: '',
       }
+    },()=>{
+      console.log('div,length: ',this.ul.querySelectorAll('div').length)
     })
+    // setState 异步函数 下面代码优先执行
+    // console.log(this.ul.querySelectorAll('div'))
   }
 
   handleItemDelete(index) {

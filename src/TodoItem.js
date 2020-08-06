@@ -13,10 +13,11 @@ class TodoItem extends Component {
   }
 
   render() {
-    const { content, text } = this.props
+    const { content } = this.props
     // JSX -> createElement -> 虚拟DOM(JS 对象) -> 真实DOM
     // return (<div><span>item</span></div>)
-    return React.createElement('div', {}, React.createElement('span', {}, 'item'))
+    // return React.createElement('div', {}, React.createElement('span', {}, 'item'))
+    return (<div><span>{content}</span></div>)
   }
 
   handleClick() {
@@ -28,7 +29,6 @@ class TodoItem extends Component {
 }
 
 TodoItem.propTypes = {
-  text: PropTypes.string.isRequired,
   content: PropTypes.string,
   index: PropTypes.number,
   deleteItem: PropTypes.func,

@@ -21,9 +21,9 @@ class TodoItem extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState, nextContext) {
-    if (nextProps.content != this.props.content)
+    if (nextProps.content !== this.props.content)
       return true
-    return true
+    return false
   }
 
   render() {

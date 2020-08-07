@@ -20,11 +20,14 @@ class TodoList extends Component {
     this.handleItemDelete = this.handleItemDelete.bind(this)
   }
 
-  co
   componentDidMount() {
-    // axios.get('/api/todolist')
-    // .then(res=>alert('success'))
-    // .catch(err=>alert('err'))
+    axios.get('/api/todolist')
+    .then(res => {
+      this.setState(() => ({
+        list: [...res.data],
+      }))
+    })
+    .catch(err => alert('err'))
   }
 
   render() {

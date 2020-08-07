@@ -12,28 +12,27 @@ class TodoItem extends Component {
     this.handleClick = this.handleClick.bind(this)
   }
 
-  // 当组件从父组件接收参数
-  // 只有父组件的render函数重新被执行，子组件的生命周期函数就会被执行
-  componentWillReceiveProps(nextProps, nextContext) {
-    console.log('child componentWillReceiveProps')
+  componentWillMount() {
+    console.log('child componentWillMount')
   }
 
-  // 当组件即将被从页面剔除，才能被执行
-  componentWillUnmount() {
-    console.log('child componentWillUnmount')
+  componentDidMount(){
+    console.log('child componentDidMount')
+  }
+
+  shouldComponentUpdate(nextProps, nextState, nextContext) {
+    if (nextProps.content != this.props.content)
+      return true
+    return true
   }
 
   render() {
     const { content } = this.props
-    // JSX -> createElement -> 虚拟DOM(JS 对象) -> 真实DOM
-    // return (<div><span>item</span></div>)
-    // return React.createElement('div', {}, React.createElement('span', {}, 'item'))
-    return (<div onClick={this.handleClick}><span>{content}</span></div>)
+    return (<div onClick={ this.handleClick }><span>{ content }</span></div>)
   }
 
   handleClick() {
     const { index, deleteItem } = this.props
-    console.log('父组件传递index: ', index)
     deleteItem(index)
   }
 
@@ -45,8 +44,6 @@ TodoItem.propTypes = {
   deleteItem: PropTypes.func,
 }
 
-TodoItem.defaultProps = {
-  text: 'text',
-}
+TodoItem.defaultProps = {}
 
 export default TodoItem

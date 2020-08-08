@@ -3,6 +3,7 @@
  * @创建时间 2020/8/7 11:48 下午
  */
 import React, { Component, Fragment } from 'react'
+import { CSSTransition } from 'react-transition-group'
 import './style.css'
 
 class App extends Component {
@@ -12,20 +13,28 @@ class App extends Component {
     this.state = {
       show: true,
     }
-    this.handleSwitchShow = this.handleSwitchShow.bind(this)
+    this.handleToggole = this.handleToggole.bind(this)
   }
 
   render() {
     const { show } = this.state
     return (
       <Fragment>
-        <div className={ show ? 'show' : 'hidden' }>Hello</div>
-        <button onClick={ this.handleSwitchShow }>toggle</button>
+        <CSSTransition in={ show }
+                       timeout={ 1000 }
+                       classNames={ 'fade' }
+          // unmountOnExit
+                       onEntered={ (el) => (el.style.color = 'red') }
+                       appear={true}
+        >
+          <div>Hello</div>
+        </CSSTransition>
+        <button onClick={ this.handleToggole }>toggle</button>
       </Fragment>
     )
   }
 
-  handleSwitchShow() {
+  handleToggole() {
     this.setState((prevState) => ({
       show: prevState.show ? false : true,
     }))

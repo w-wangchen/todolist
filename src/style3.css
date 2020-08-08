@@ -1,11 +1,9 @@
 /* 入场动画 */
-.fade-enter,
-.fade-appear {
+.fade-enter {
   opacity: 0;
 }
 
-.fade-enter-active,
-.fade-apper-active {
+.fade-enter-active {
   opacity: 1;
   transition: opacity 1s ease-in;
 }

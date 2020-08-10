@@ -3,7 +3,8 @@
  * @创建时间 2020/7/22 12:49 上午
  */
 import React, { Component, Fragment } from 'react'
-import { Tabs, TabPanel } from './Tabs'
+import Tabs from './Tabs'
+import TabPanel from './Tabs/Panel'
 import Pannel from './Panel'
 import {
   SZCode,
@@ -14,6 +15,19 @@ import {
   getAreaBroderInfo,
 } from './getData'
 import './style.css'
+
+const content= [
+  { areaName: '罗湖区', code: '440304' },
+  { areaName: '福田区', code: '440303' },
+  { areaName: '南山区', code: '440305' },
+  { areaName: '盐田区', code: '440308' },
+  { areaName: '龙岗区', code: '440307' },
+  { areaName: '宝安区', code: '440306' },
+  { areaName: '龙华区', code: '440309' },
+  { areaName: '坪山区', code: '440310' },
+  { areaName: '光明区', code: '440311' },
+  { areaName: '大鹏区', code: '440312' },
+]
 
 class Map extends Component {
 
@@ -29,33 +43,51 @@ class Map extends Component {
       activeTab: 0,
     }
     this.handleToggleTab = this.handleToggleTab.bind(this)
+    this.handleClickItem = this.handleClickItem.bind(this)
   }
 
   componentDidMount() {
-    this.initMap()
+    // this.initMap()
     // this.renderMap()
+  }
+
+  handleToggleTab(activeCode) {
+    console.log(activeCode)
+    this.setState(()=>{
+      return {
+        activeTab: activeCode
+      }
+    })
+  }
+
+  handleClickItem(code) {
+    console.log(code)
   }
 
   render() {
     const { activeTab } = this.state
     return (
       <Fragment>
-        <div id="container"></div>
+        {/*<div id="container"></div>*/}
 
         <Tabs activeTab={ activeTab }
-              onClick={this.handleToggleTab}
+              onClick={ this.handleToggleTab }
         >
-          <TabPanel label={'行政区'}>
-            <Pannel/>
+          <TabPanel label={ '行政区' } sub={0}>
+            <Pannel clickItem={ this.handleClickItem }
+                    content={content}/>
           </TabPanel>
-          <TabPanel label={'管辖行'}>
-
+          <TabPanel label={ '管辖行' } sub={1}>
+            <Pannel clickItem={ this.handleClickItem }
+                    content={content}/>
           </TabPanel>
-          <TabPanel label={'主要同业'}>
-
+          <TabPanel label={ '主要同业' } sub={2}>
+            <Pannel clickItem={ this.handleClickItem }
+                    content={content}/>
           </TabPanel>
-          <TabPanel label={'业务指标'}>
-
+          <TabPanel label={ '业务指标' } sub={3}>
+            <Pannel clickItem={ this.handleClickItem }
+                    content={content}/>
           </TabPanel>
         </Tabs>
       </Fragment>

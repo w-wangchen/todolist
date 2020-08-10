@@ -7,15 +7,25 @@ import React, { Component, Fragment } from 'react'
 class Widget extends Component {
 
   constructor(props) {
-    super(props);
+    super(props)
+    this.handleClick = this.handleClick.bind(this)
   }
 
   render() {
-    return (
-      <Fragment>
+    const { label, onClick, activeTab, index } = this.props
 
-      </Fragment>
+    let className = ''
+    if (activeTab === index)
+      className += 'active'
+    return (
+      <p className={ className }
+         onClick={ this.handleClick }>{ label }</p>
     )
+  }
+
+  handleClick() {
+    const { onClick, index } = this.props
+    onClick(index)
   }
 }
 

@@ -4,7 +4,10 @@
  */
 import React, { Component, Fragment } from 'react'
 import Tab from './Tab'
-import TabPanel from './TabPanel'
+import PropTypes from 'prop-types'
+import './index.css'
+
+import Widget from '../Panel'
 
 class Tabs extends Component {
 
@@ -13,13 +16,43 @@ class Tabs extends Component {
   }
 
   render() {
+    const { children, onClick, activeTab } = this.props
+    console.log('children: ', children)
     return (
-      <Fragment>
+      <div className={ 'container' }>
+        <div className={ 'container-header' }>
+          { children.map((item, index) => {
+            const { label } = item.props
+            return <Tab key={ index }
+                        index={ index }
+                        label={ label }
+                        onClick={ onClick }
+                        activeTab={ activeTab }
+            />
+          }) }
+        </div>
+        <div className={ 'bank-area' }>
+          {
+            children.map((item, index) => {
+              const { sub, children } = item.props
+              if (sub === activeTab)
+                return children
+            })
+          }
+        </div>
 
-      </Fragment>
+
+      </div>
     )
   }
 }
 
+Widget.propTypes = {
+  children: PropTypes.element,
+  onClick: PropTypes.func,
+  activeTab: PropTypes.string,
+}
 
-export { Tabs, TabPanel }
+Widget.defaultProps = {}
+
+export default Tabs

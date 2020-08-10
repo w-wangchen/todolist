@@ -1,5 +1,5 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import Widget from './Widget'
+import Map from './Map'
 
-ReactDOM.render(<Widget/>, document.getElementById('root'))
+ReactDOM.render(<Map/>, document.getElementById('root'))

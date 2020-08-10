@@ -16,18 +16,6 @@ import {
 } from './getData'
 import './style.css'
 
-const content= [
-  { areaName: '罗湖区', code: '440304' },
-  { areaName: '福田区', code: '440303' },
-  { areaName: '南山区', code: '440305' },
-  { areaName: '盐田区', code: '440308' },
-  { areaName: '龙岗区', code: '440307' },
-  { areaName: '宝安区', code: '440306' },
-  { areaName: '龙华区', code: '440309' },
-  { areaName: '坪山区', code: '440310' },
-  { areaName: '光明区', code: '440311' },
-  { areaName: '大鹏区', code: '440312' },
-]
 
 class Map extends Component {
 
@@ -52,10 +40,10 @@ class Map extends Component {
   }
 
   handleToggleTab(activeCode) {
-    console.log(activeCode)
-    this.setState(()=>{
+    //console.log(activeCode)
+    this.setState(() => {
       return {
-        activeTab: activeCode
+        activeTab: activeCode,
       }
     })
   }
@@ -68,26 +56,26 @@ class Map extends Component {
     const { activeTab } = this.state
     return (
       <Fragment>
-        {/*<div id="container"></div>*/}
+        {/*<div id="container"></div>*/ }
 
-        <Tabs activeTab={ activeTab }
-              onClick={ this.handleToggleTab }
+        <Tabs activeTab={activeTab}
+          onClick={ this.handleToggleTab }
         >
-          <TabPanel label={ '行政区' } sub={0}>
+          <TabPanel label={ '行政区' } sub={ 0 }>
             <Pannel clickItem={ this.handleClickItem }
-                    content={content}/>
+            />
           </TabPanel>
-          <TabPanel label={ '管辖行' } sub={1}>
+          <TabPanel label={ '管辖行' } sub={ 1 }>
             <Pannel clickItem={ this.handleClickItem }
-                    content={content}/>
+            />
           </TabPanel>
-          <TabPanel label={ '主要同业' } sub={2}>
+          <TabPanel label={ '主要同业' } sub={ 2 }>
             <Pannel clickItem={ this.handleClickItem }
-                    content={content}/>
+            />
           </TabPanel>
-          <TabPanel label={ '业务指标' } sub={3}>
+          <TabPanel label={ '业务指标' } sub={ 3 }>
             <Pannel clickItem={ this.handleClickItem }
-                    content={content}/>
+            />
           </TabPanel>
         </Tabs>
       </Fragment>
@@ -209,7 +197,7 @@ class Map extends Component {
   // 管辖行信息添加
   sceneAddInfo(areaLayer) {
     const _this = this
-    console.log(1)
+
     const area = [...areaInfo]
 
     area.map((item, index) => {

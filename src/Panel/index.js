@@ -13,24 +13,43 @@ class Widget extends Component {
   }
 
   render() {
-    const { content } = this.props
-    //console.log(this.props)
+    const { content, className } = this.props
+    // console.log(this.props)
     return (
       <Fragment>
         {
           content.map((item, index) => {
-            const { areaName, code } = item
+            const { name, code } = item
+
+            const areaName = item.areaName || ''
+            const areaNo = item.areaNo || ''
+            const belongNo = item.belongNo || ''
+            const lon = item.lon || ''
+            const lat = item.lat || ''
+            const onclick = item.onclick || false
+            const stateName = item.stateName || ''
             return <p key={ code }
-                      onClick={ this.handleClick.bind(this, code) }>{ areaName }</p>
+                      className={ onclick ? `${ className } active` : className }
+                      onClick={ this.handleClick.bind(this, {
+                        code,
+                        areaName,
+                        areaNo,
+                        belongNo,
+                        lon,
+                        lat,
+                        onclick,
+                        stateName,
+                        name,
+                      }) }>{ name }</p>
           })
         }
       </Fragment>
     )
   }
 
-  handleClick(code) {
+  handleClick(params) {
     const { clickItem } = this.props
-    clickItem(code)
+    clickItem(params)
   }
 }
 
@@ -41,16 +60,16 @@ Widget.propTypes = {
 
 Widget.defaultProps = {
   content: [
-    { areaName: '罗湖区', code: '440304' },
-    { areaName: '福田区', code: '440303' },
-    { areaName: '南山区', code: '440305' },
-    { areaName: '盐田区', code: '440308' },
-    { areaName: '龙岗区', code: '440307' },
-    { areaName: '宝安区', code: '440306' },
-    { areaName: '龙华区', code: '440309' },
-    { areaName: '坪山区', code: '440310' },
-    { areaName: '光明区', code: '440311' },
-    { areaName: '大鹏区', code: '440312' },
+    { name: '罗湖区', code: '440304', onclick: false, stateName: 'pannelAreas' },
+    { name: '福田区', code: '440303', onclick: false, stateName: 'pannelAreas' },
+    { name: '南山区', code: '440305', onclick: false, stateName: 'pannelAreas' },
+    { name: '盐田区', code: '440308', onclick: false, stateName: 'pannelAreas' },
+    { name: '龙岗区', code: '440307', onclick: false, stateName: 'pannelAreas' },
+    { name: '宝安区', code: '440306', onclick: false, stateName: 'pannelAreas' },
+    { name: '龙华区', code: '440309', onclick: false, stateName: 'pannelAreas' },
+    { name: '坪山区', code: '440310', onclick: false, stateName: 'pannelAreas' },
+    { name: '光明区', code: '440311', onclick: false, stateName: 'pannelAreas' },
+    { name: '大鹏区', code: '440312', onclick: false, stateName: 'pannelAreas' },
   ],
 
 }

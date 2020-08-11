@@ -67,79 +67,30 @@ const areaInfo = [
   },
 ]
 
-const luohu_bank = [
-  {
-    'name': '英达花园支行',
-    'position': [114.12184706756004, 22.576249221906703],
-  },
-  {
-    'name': '翠竹北路支行',
-    'position': [114.12629091308723, 22.573334103830987],
-  }, {
-    'name': '东乐支行',
-    'position': [114.1356319065562, 22.571960768708315],
-  }, {
-    'name': '布心支行',
-    'position': [114.14242576247072, 22.57807283177628],
-  }, {
-    'name': '彩虹支行',
-    'position': [114.10937409065151, 22.565637003022918],
-  }, {
-    'name': '水贝支行',
-    'position': [114.12632375217659, 22.56656516173034],
-  }, {
-    'name': '水库新村支行',
-    'position': [114.13995657407915, 22.561926933727648],
-  }, {
-    'name': '文锦广场支行',
-    'position': [114.12536095627618, 22.558331708352746],
-  }, {
-    'name': '笋岗支行',
-    'position': [114.10706185344701, 22.55524836692153],
-  }, {
-    'name': '华丽支行',
-    'position': [114.13465275232801, 22.552381893261625],
-  }, {
-    'name': '莲塘支行',
-    'position': [114.1722821791357, 22.56041518039179],
-  }, {
-    'name': '罗湖支行',
-    'position': [114.11040885519387, 22.547251127830624],
-  }, {
-    'name': '东门支行',
-    'position': [114.12187742968297, 22.547235557516633],
-  }, {
-    'name': '新秀支行',
-    'position': [114.14514214318899, 22.54734245392417],
-  }, {
-    'name': '文锦渡支行',
-    'position': [114.12924704353892, 22.545206180274764],
-  }, {
-    'name': '深南支行',
-    'position': [114.10748874689425, 22.543401258672812],
-  }, {
-    'name': '中建大厦支行',
-    'position': [114.12328815497843, 22.543656116696656],
-  }, {
-    'name': '深圳市分行',
-    'position': [114.11642803615511, 22.54117394398366],
-  }, {
-    'name': '国贸支行',
-    'position': [114.11973916232228, 22.540496495729222],
-  }, {
-    'name': '向西路支行',
-    'position': [114.12568989467722, 22.54152634986742],
-  }, {
-    'name': '万象支行',
-    'position': [114.1120298643992, 22.53939395811106],
-  }, {
-    'name': '人民南路支行',
-    'position': [114.12837029079012, 22.53826355248329],
-  }, {
-    'name': '沿河南支行',
-    'position': [114.11863174137281, 22.534646664764896],
-  },
+const AreasData = [
+  { name: '罗湖区', code: '440304', onclick: false, stateName: 'pannelAreas' },
+  { name: '福田区', code: '440303', onclick: false, stateName: 'pannelAreas' },
+  { name: '南山区', code: '440305', onclick: false, stateName: 'pannelAreas' },
+  { name: '盐田区', code: '440308', onclick: false, stateName: 'pannelAreas' },
+  { name: '龙岗区', code: '440307', onclick: false, stateName: 'pannelAreas' },
+  { name: '宝安区', code: '440306', onclick: false, stateName: 'pannelAreas' },
+  { name: '龙华区', code: '440309', onclick: false, stateName: 'pannelAreas' },
+  { name: '坪山区', code: '440310', onclick: false, stateName: 'pannelAreas' },
+  { name: '光明区', code: '440311', onclick: false, stateName: 'pannelAreas' },
+  { name: '大鹏区', code: '440312', onclick: false, stateName: 'pannelAreas' },
+]
+
+const AacompanysData = [
+  { name: '中国银行', code: 'boc', onclick: false, stateName: 'pannelAacompanys' },
+  { name: '工商银行', code: 'icbc', onclick: false, stateName: 'pannelAacompanys' },
+  { name: '农业银行', code: 'abc', onclick: false, stateName: 'pannelAacompanys' },
+  { name: '建设银行', code: 'ccb', onclick: false, stateName: 'pannelAacompanys' },
+  { name: '招商银行', code: 'cmb', onclick: false, stateName: 'pannelAacompanys' },
+]
+
+const BusinessData = [
+  { name: '网点金融资产规模', code: 'asset', onclick: false, stateName: 'pannelBusiness' },
 ]
 
 
-export { SZCode, areaInfo }
+export { SZCode, areaInfo, AreasData, AacompanysData, BusinessData }

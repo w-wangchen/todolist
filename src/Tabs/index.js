@@ -22,9 +22,9 @@ class Widget extends Component {
   render() {
     const { slide } = this.state
     const { children, onClick, activeTab } = this.props
-    //console.log('children: ', children)
+    // console.log('this.props: ', this.props)
     return (
-      <div className={ slide ? 'container show' : 'container hidden' }>
+      <div className={ 'container' }>
         <div className={ 'back' }>返回</div>
         <div className={ 'container-header' }>
           { children.map((item, index) => {
@@ -37,7 +37,7 @@ class Widget extends Component {
             />
           }) }
         </div>
-        <div className={ slide ? 'bank-area visible' : 'bank-area none'}>
+        <div className={ slide ? `bank-area show` : `bank-area hidden` }>
           {
             children.map((item, index) => {
               const { sub, children } = item.props

@@ -9,11 +9,23 @@ import Pannel from './Panel'
 import {
   SZCode,
   areaInfo,
+  AreasData,
+  AacompanysData,
+  BusinessData,
 } from './szCode'
 import {
   postPointOrgInfo,
   getAreaBroderInfo,
 } from './getData'
+import {
+  path,
+  pathOr,
+  assoc,
+  assocPath,
+  findIndex,
+  propEq,
+  isEmpty,
+} from 'ramda'
 import './style.css'
 
 
@@ -29,14 +41,19 @@ class Map extends Component {
       governingLayerArr: [],// 管辖行
       aacompanyLayerArr: [],// 同行
       activeTab: 0,
+      pannelAreas: AreasData,
+      pannelGovernings: [],
+      pannelAacompanys: AacompanysData,
+      pannelBusiness: BusinessData,
     }
     this.handleToggleTab = this.handleToggleTab.bind(this)
     this.handleClickItem = this.handleClickItem.bind(this)
   }
 
   componentDidMount() {
-    // this.initMap()
+    this.initMap()
     // this.renderMap()
+    this.initGxhPannelData()
   }
 
   handleToggleTab(activeCode) {
@@ -48,35 +65,82 @@ class Map extends Component {
     })
   }
 
-  handleClickItem(code) {
-    console.log(code)
+  handleClickItem(params) {
+    console.log('handleClickItem: ', params)
+    const onclick = pathOr(false, ['onclick'], params) ? false : true
+    const obj = assoc('onclick', onclick, params)
+    const stateName = pathOr('', ['stateName'], params)
+    this.setState((prevState) => {
+      const stateData = prevState[stateName]
+      const index = findIndex(propEq('code', obj['code']))(stateData)
+      const data = assocPath([index], obj)(stateData)
+      return {
+        [stateName]: data,
+      }
+    })
+
+  }
+
+  async initGxhPannelData() {
+    const res = await postPointOrgInfo({
+      belongNo: 'boc',
+      orgLevel: '管辖',
+    })
+    const data = res.map((item, index) => {
+      const { areaName, areaNo, belongNo, lon, lat, orgNo, orgName } = item
+      const name = orgName.replace('中国银行深圳', '')
+      return {
+        areaName,
+        areaNo,
+        belongNo,
+        lon,
+        lat,
+        code: orgNo,
+        name,
+        onclick: false,
+        stateName: 'pannelGovernings',
+      }
+    })
+    this.setState(() => {
+      return { pannelGovernings: data }
+    })
   }
 
   render() {
-    const { activeTab } = this.state
+    const { activeTab, pannelAreas, pannelGovernings, pannelAacompanys, pannelBusiness } = this.state
+
+    // console.log('render; ', pannelGovernings)
     return (
       <Fragment>
-        {/*<div id="container"></div>*/ }
+        <div id="container"></div>
 
-        <Tabs activeTab={activeTab}
-          onClick={ this.handleToggleTab }
+        <Tabs activeTab={ activeTab }
+              onClick={ this.handleToggleTab }
         >
           <TabPanel label={ '行政区' } sub={ 0 }>
             <Pannel clickItem={ this.handleClickItem }
+                    className={ 'district' }
+                    content={ pannelAreas }
             />
           </TabPanel>
           <TabPanel label={ '管辖行' } sub={ 1 }>
             <Pannel clickItem={ this.handleClickItem }
+                    className={ 'governing' }
+                    content={ pannelGovernings }
             />
           </TabPanel>
           <TabPanel label={ '主要同业' } sub={ 2 }>
             <Pannel clickItem={ this.handleClickItem }
+                    className={ 'aacompany' }
+                    content={ pannelAacompanys }
             />
           </TabPanel>
-          <TabPanel label={ '业务指标' } sub={ 3 }>
-            <Pannel clickItem={ this.handleClickItem }
-            />
-          </TabPanel>
+          {/*<TabPanel label={ '业务指标' } sub={ 3 }>*/ }
+          {/*  <Pannel clickItem={ this.handleClickItem }*/ }
+          {/*          className={ 'business' }*/ }
+          {/*          content={ pannelBusiness }*/ }
+          {/*  />*/ }
+          {/*</TabPanel>*/ }
         </Tabs>
       </Fragment>
     )

@@ -23,8 +23,12 @@ import {
   assoc,
   assocPath,
   findIndex,
+  find,
   propEq,
   isEmpty,
+  equals,
+  reject,
+  filter,
 } from 'ramda'
 import './style.css'
 
@@ -43,11 +47,17 @@ class Map extends Component {
       activeTab: 0,
       pannelAreas: AreasData,
       pannelGovernings: [],
+      constPannelGovernings: [],
       pannelAacompanys: AacompanysData,
       pannelBusiness: BusinessData,
+      center: '',
+      boundaryLayer: '',// 边界图层
+      areaPointLayer: '',// 区域点和文字图层
+      clickCode:'',// 获取地图上的机构号
     }
     this.handleToggleTab = this.handleToggleTab.bind(this)
     this.handleClickItem = this.handleClickItem.bind(this)
+    this.handleBackMap = this.handleBackMap.bind(this)
   }
 
   componentDidMount() {
@@ -65,11 +75,18 @@ class Map extends Component {
     })
   }
 
+  handleBackMap() {
+    console.log('back')
+    const { center } = this.state
+    this.resetScene(center, 2, 'back')
+
+  }
+
   handleClickItem(params) {
-    console.log('handleClickItem: ', params)
     const onclick = pathOr(false, ['onclick'], params) ? false : true
     const obj = assoc('onclick', onclick, params)
     const stateName = pathOr('', ['stateName'], params)
+    const code = pathOr('440304', ['code'], params)
     this.setState((prevState) => {
       const stateData = prevState[stateName]
       const index = findIndex(propEq('code', obj['code']))(stateData)
@@ -77,6 +94,65 @@ class Map extends Component {
       return {
         [stateName]: data,
       }
+    }, () => {
+      const lon = +pathOr(114.161116, ['lon'], params)
+      const lat = +pathOr(22.582173, ['lat'], params)
+      const name = pathOr('罗湖区', ['name'], params)
+      const point = [lon, lat]
+      // 行政区
+      if (equals(stateName, 'pannelAreas')) {
+
+        const AreasState = this.state.pannelAreas
+        const item = find((i) => i.code === code)(AreasState)
+
+        if (!item.onclick) {
+
+          this.setState((prevState) => {
+            const child = filter(propEq('code', code))(prevState.boundaryLayer.children)
+            const childs = reject(propEq('code', code))(prevState.boundaryLayer.children)
+            const child1 = filter(propEq('code', code))(prevState.areaPointLayer.children)
+            const childs1 = reject(propEq('code', code))(prevState.areaPointLayer.children)
+            console.log('child1', child1)
+            console.log('childs1', childs1)
+            if (!isEmpty(child)) {
+              console.log(child[0])
+              this.state.boundaryLayer.removeFeature(child[0])
+            }
+            if (!isEmpty(child1)){
+              console.log(child1[0])
+              console.log(child1[1])
+              this.state.areaPointLayer.removeFeature(child1[0])
+              // this.state.areaPointLayer.removeFeature(child1[1])
+              console.log(this.state.areaPointLayer)
+            }
+            const newBoundaryLayer = assoc(['children'], childs, this.state.boundaryLayer)
+            const newAreaPointLayer = assoc(['children'], childs, this.state.areaPointLayer)
+            return {
+              boundaryLayer: newBoundaryLayer,
+              areaPointLayer: newAreaPointLayer,
+            }
+          })
+          return false
+        }
+        // 移动
+        this.move(point)
+        // 添加区域
+        this.addBorder(name, code)
+        const data = {
+          areaNo: code,
+          belongNo: 'boc',
+        }
+        this.areaPoint(data, this.state.areaPointLayer, name, 'areaPointLayerArr', code)
+      }
+      // 管辖行
+      if (equals(stateName, 'pannelGovernings')) {
+        // 移动该管辖行
+        this.move(point)
+        // 添加管辖行区域点
+
+      }
+
+
     })
 
   }
@@ -102,7 +178,10 @@ class Map extends Component {
       }
     })
     this.setState(() => {
-      return { pannelGovernings: data }
+      return {
+        pannelGovernings: data,
+        constPannelGovernings: data,
+      }
     })
   }
 
@@ -116,6 +195,7 @@ class Map extends Component {
 
         <Tabs activeTab={ activeTab }
               onClick={ this.handleToggleTab }
+              onBack={ this.handleBackMap }
         >
           <TabPanel label={ '行政区' } sub={ 0 }>
             <Pannel clickItem={ this.handleClickItem }
@@ -179,54 +259,98 @@ class Map extends Component {
     this.areaLayer = new window.LongMap.Layer()
     this.map.addLayer(this.areaLayer)
 
-    // 区域中国银行图层
-    const areaPointLayer = new window.LongMap.Layer()
-    this.map.addLayer(areaPointLayer)
+    this.setState((prevState) => {
 
-    this.resetScene(center, duration, this.initScene, this.areaLayer)
-    // 场景添加区域信息
-    this.sceneAddInfo(this.areaLayer)
+      //区边界图层
+      const boundaryLayer = new window.LongMap.Layer()
+      this.map.addLayer(boundaryLayer)
+      // 区域中国银行图层
+      const areaPointLayer = new window.LongMap.Layer()
+      this.map.addLayer(areaPointLayer)
+      return {
+        center,
+        boundaryLayer,
+        areaPointLayer,
+      }
+    }, () => {
 
-    this.map.addEventListener('click', (event) => {
-      const features = event.features[0]
-      if (!features) return
-      if (!features.msg) return
-      const { name, position } = features.msg
-      // 获取点击区域code
-      const areaCode = SZCode[name]
-      const point = new window.LongMap.Point3(...position, 29032)
+      this.resetScene(center, duration)
 
-      // 添加区域边框线
-      this.addBorder(name)
-      // 进行移动
-      this.map.flyTo({
-        point,
-        complete: () => {
-          // 隐藏初始化场景
-          this.initScene.hide()
-          // 区域图层名称隐藏
-          this.areaLayer.hide()
-          // 显示地图
-          this.map.setSceneState(true)
-          // 地图允许操作
-          this.map.controlsEnabled(true)
+      // 场景添加区域信息
+      this.sceneAddInfo(this.areaLayer)
 
-          let data = {
-            areaNo: areaCode,
+      this.map.addEventListener('click', (event) => {
+        const features = event.features[0]
+        if (!features) return
+        if (!features.msg) return
+        const { name, position } = features.msg
+        // 获取点击区域code
+        const areaCode = SZCode[name]
+        const point = new window.LongMap.Point3(...position, 29032)
+        // code 对应看板
+        this.setState((prevState) => {
+          const stateData = prevState['pannelAreas']
+          const index = findIndex(propEq('code', areaCode))(stateData)
+          const data = assocPath([index, 'onclick'], true, stateData)
+          return {
+            pannelAreas: data,
           }
-          this.areaPoint(data, areaPointLayer, name, areaPointLayerArr)
+        }, () => {
 
-        },
+          console.log('initMap this.map.flyTo')
+          // 添加区域边框线
+          this.addBorder(name, areaCode)
+          // 进行移动
+          this.map.flyTo({
+            point,
+            complete: () => {
+              // 隐藏初始化场景
+              this.initScene.hide()
+              // 区域图层名称隐藏
+              this.areaLayer.hide()
+              // 显示地图
+              this.map.setSceneState(true)
+              // 地图允许操作
+              this.map.controlsEnabled(true)
+
+              const data = {
+                areaNo: areaCode,
+                belongNo: 'boc',
+              }
+              this.areaPoint(data, this.state.areaPointLayer, name, 'areaPointLayerArr', areaCode)
+
+            },
+          })
+
+        })
+
+
+      })
+
+      // 点击获取机构号
+      this.map.addEventListener('click', (event)=>{
+        const features = event.features[0]
+        if(!features) return
+        if(!features.code) return
+        const clickCode = features.code
+        this.setState((prevState)=>{
+          return {
+            clickCode,
+          }
+        })
       })
 
 
     })
 
 
+
+
   }
 
   // 初始管辖行区域信息
-  resetScene(center, duration, initScene, areaLayer) {
+  resetScene(center, duration, type) {
+    console.log(123)
     const { governingLayerArr, aacompanyLayerArr, areaPointLayerArr } = this.state
     this.map.flyTo({
       point: center,
@@ -237,22 +361,35 @@ class Map extends Component {
         //隐藏底图
         this.map.setSceneState(false)
 
-        console.log(this.boundaryLayer)
-        // this.initScene.show()
-        // for (let i = 0; i < governingLayerArr.length; i++) {
-        //   this.map.removeLayer(governingLayerArr[i].layer)
-        // }
-        // for (let i = 0; i < aacompanyLayerArr.length; i++) {
-        //   this.map.removeLayer(aacompanyLayerArr[i].layer)
-        // }
-        // for (let i = 0; i < areaPointLayerArr.length; i++) {
-        //   this.map.removeLayer(areaPointLayerArr[i].layer)
-        // }
-        // // $('.bank-area p').removeClass('active')
-        // areaLayer.show()
-        // this.boundaryLayer.hide();
+        if (type === 'back') {
 
+          this.setState((prevState) => {
+            this.map.removeLayer(prevState.boundaryLayer)
+            return {
+              pannelAreas: AreasData,
+              pannelGovernings: prevState.constPannelGovernings,
+              pannelAacompanys: AacompanysData,
+              pannelBusiness: BusinessData,
+              boundaryLayer: new window.LongMap.Layer(),
+            }
+          }, () => {
+            this.initScene.show()
+            // const { areaPointLayerArr, aacompanyLayerArr, governingLayerArr } = this.state
+            // console.log('areaPointLayerArr:', areaPointLayerArr)
+            // areaPointLayerArr.forEach(i => {
+            //   this.map.removeLayer(i.layer)
+            // })
+            // aacompanyLayerArr.forEach(i => this.map.removeLayer(i.layer))
+            // governingLayerArr.forEach(i => this.map.removeLayer(i.layer))
+            // console.log('this.boundaryLayer', this.boundaryLayer)
+            // console.log('this.areaPointLayer', this.areaPointLayer)
+            // this.areaLayer.show()
+            // // this.boundaryLayer.children.forEach(i=> )
+            // this.areaPointLayer.hide()
+            //
+          })
 
+        }
       },
     }, -42)
 
@@ -260,8 +397,6 @@ class Map extends Component {
 
   // 管辖行信息添加
   sceneAddInfo(areaLayer) {
-    const _this = this
-
     const area = [...areaInfo]
 
     area.map((item, index) => {
@@ -302,65 +437,53 @@ class Map extends Component {
   }
 
   // 区域对应银行点
-  async areaPoint(data, layer, name, layerArr) {
-    layerArr.push({
-      name: name,
-      'layer': layer,
-    })
-    // console.log('layerArr: ', layerArr)
-    for (var k in data) {
-      if (data[k] == '') {
-        delete data[k]
-      }
-    }
-
+  async areaPoint(data, layer, name, layerArr, areaCode) {
     const res = await postPointOrgInfo(data)
+    const index = findIndex(propEq('code', areaCode))(this.state.areaPointLayer.children)
+    console.log(index)
+    if (index === -1)
+      res.map((item, index) => {
+        const { orgName, orgNo, belongNo, lon, lat } = item
+        let sprite = this.addSprite({
+          url: `http://wechat.bluehy.com/img/${ belongNo }.png`,
+          position: new window.LongMap.Point3(lon, lat, 0),
+          scale: 0.3,
+          offset: {
+            x: 0,
+            y: -10,
+          },
+        }, layer)
+        // sprite.object._billboards[0].distanceDisplayCondition = new window.Cesium.DistanceDisplayCondition(
+        //   10.0, 25000.0)
 
-    res.map((item, index) => {
-      const { orgName, orgNo, belongNo, lon, lat } = item
-      const sprite = this.addSprite({
-        url: `http://wechat.bluehy.com/img/${ belongNo }.png`,
-        position: new window.LongMap.Point3(lon, lat, 0),
-        scale: 0.3,
-        offset: {
-          x: 0,
-          y: -10,
-        },
-      }, layer)
+        sprite.orgName = orgName
+        sprite.orgNo = orgNo
+        sprite.type = belongNo
+        sprite.code = areaCode
 
-      sprite.orgName = orgName
-      sprite.orgNo = orgNo
-      sprite.type = belongNo
-
-      const textData = {
-        text: orgName,
-        scale: 1,
-        position: new window.LongMap.Point3(lon, lat, 0),
-        color: new window.LongMap.Color('#FF0000'),
-        offset: {
-          x: 20,
-          y: 0,
-        },
-      }
-      const text = this.addText(textData, layer)
-    })
+        // let textData = {
+        //   text: orgName,
+        //   scale: 1,
+        //   position: new window.LongMap.Point3(lon, lat, 0),
+        //   color: new window.LongMap.Color('#FF0000'),
+        //   offset: {
+        //     x: 20,
+        //     y: 0,
+        //   },
+        // }
+        //
+        // let text = this.addText(textData, layer)
+        // text.code = areaCode
+        // text.object._labels[0].distanceDisplayCondition=new window.Cesium.DistanceDisplayCondition(10.0, 25000.0);
+      })
 
   }
 
-  async addBorder(name) {
+  async addBorder(name, code) {
     const res = await getAreaBroderInfo()
-    //区边界图层
-    this.boundaryLayer = new window.LongMap.Layer()
-    this.map.addLayer(this.boundaryLayer)
-    this.setState((prevState) => {
-      const { boundaryLayerArr } = prevState
-      return {
-        boundaryLayerArr: [...boundaryLayerArr, {
-          name: name,
-          'layer': this.boundaryLayer,
-        }],
-      }
-    }, async () => {
+    const index = findIndex(propEq('code', code))(this.state.boundaryLayer.children)
+    console.log(index)
+    if ((index === -1))
       res.features.map((feature, index) => {
         if (feature.properties.name == name) {
           const points = []
@@ -369,17 +492,39 @@ class Map extends Component {
             const sp = window.wgs84togcj02(...point)
             points.push(new window.LongMap.Point3(...sp, 0))
           })
-          //区域边界
 
-          const line = new window.LongMap.Line({
+          let line = new window.LongMap.Line({
             points: points,
             width: 3,
-            color: new window.LongMap.Color('#6EFFFF'),
+            color: new window.LongMap.Color('#6EFFFF', 0.5),
           })
-          this.boundaryLayer.addFeature(line)
+          line.code = code
+
+          this.state.boundaryLayer.addFeature(line)
         }
       })
 
+  }
+
+  move(point) {
+    this.map.flyTo({
+      //位置
+      point: new window.LongMap.Point3(...point, 19032),
+      //完成回调
+      complete: () => {
+        //设置地图可以操作
+        this.map.controlsEnabled(true)
+        //设置地图可看到
+        this.map.setSceneState(true)
+        //隐藏初始化元素
+        if (this.initScene) this.initScene.hide()
+        //隐藏区域名称
+        if (this.areaLayer) this.areaLayer.hide()
+        //显示银行图标点
+        if (this.bankLayer) this.bankLayer.show()
+        //隐藏区域边界
+        if (this.boundaryLayer) this.boundaryLayer.show()
+      },
     })
   }
 

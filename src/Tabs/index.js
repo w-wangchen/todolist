@@ -6,6 +6,7 @@ import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
 import Tab from './Tab'
 import arrowURL from '../img/arrow.png'
+import arrowUPURL from '../img/arrow-up.png'
 import './index.css'
 
 
@@ -17,15 +18,18 @@ class Widget extends Component {
       slide: true,
     }
     this.handleSlideToggle = this.handleSlideToggle.bind(this)
+    this.handleBack = this.handleBack.bind(this)
   }
 
   render() {
     const { slide } = this.state
-    const { children, onClick, activeTab } = this.props
+    const { children, onClick, activeTab} = this.props
     // console.log('this.props: ', this.props)
     return (
       <div className={ 'container' }>
-        <div className={ 'back' }>返回</div>
+        <div className={ 'back' }
+             onClick={ this.handleBack }>返回
+        </div>
         <div className={ 'container-header' }>
           { children.map((item, index) => {
             const { label } = item.props
@@ -48,7 +52,7 @@ class Widget extends Component {
         </div>
         <div className={ 'arrow' }
              onClick={ this.handleSlideToggle }>
-          <img src={ arrowURL }/>
+          <img src={ slide ? arrowUPURL : arrowURL }/>
         </div>
       </div>
     )
@@ -61,11 +65,17 @@ class Widget extends Component {
       }
     })
   }
+
+  handleBack() {
+    const { onBack } = this.props
+    onBack()
+  }
 }
 
 Widget.propTypes = {
   children: PropTypes.array,
   onClick: PropTypes.func,
+  onBack: PropTypes.func,
   activeTab: PropTypes.number,
 }
 

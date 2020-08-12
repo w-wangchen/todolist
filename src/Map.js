@@ -40,10 +40,6 @@ class Map extends Component {
     this.state = {
       backgroundImg: 'http://wechat.bluehy.com/img/map_bg.png',
       providerImg: 'http://banktest.longmap.com/model/tiles1/tiles/{z}/{x}/{y}.jpg',
-      boundaryLayerArr: [],// 边界
-      areaPointLayerArr: [],// 区域
-      governingLayerArr: [],// 管辖行
-      aacompanyLayerArr: [],// 同行
       activeTab: 0,
       pannelAreas: AreasData,
       pannelGovernings: [],
@@ -85,7 +81,7 @@ class Map extends Component {
   }
 
   handleClickItem(params) {
-    console.log('click', params)
+    console.log('params', params)
     this.state.areaLayer.hide()
     const onclick = pathOr(false, ['onclick'], params) ? false : true
     const obj = assoc('onclick', onclick, params)
@@ -106,7 +102,6 @@ class Map extends Component {
       const point = [lon, lat]
       // 行政区
       if (equals(stateName, 'pannelAreas')) {
-
         const AreasState = this.state.pannelAreas
         const item = find((i) => i.code === code)(AreasState)
         if (!item.onclick) {
@@ -138,7 +133,7 @@ class Map extends Component {
           areaNo: code,
           belongNo: 'boc',
         }
-        this.areaPoint(data, 'areaPointLayer', name, 'areaPointLayerArr', code)
+        this.areaPoint(data, 'areaPointLayer', name, code)
       }
       // 管辖行
       if (equals(stateName, 'pannelGovernings')) {
@@ -175,13 +170,32 @@ class Map extends Component {
           orgNo: code,
           belongNo: 'boc',
         }
-        this.areaPoint(data, 'governingLayer', name, 'governingLayerArr', code)
+        this.areaPoint(data, 'governingLayer', name, code)
       }
+      // 同业
       if (equals(stateName, 'pannelAacompanys')) {
         const aacompanyState = this.state.pannelAacompanys
         const item = find((i) => i.code === code)(aacompanyState)
-        console.log('item', item)
-
+        if (!item.onclick) {
+          this.setState((prevState) => {
+            const child1 = filter(propEq('code', code))(prevState.aacompanyLayer.children)
+            const childs1 = reject(propEq('code', code))(prevState.aacompanyLayer.children)
+            if (!isEmpty(child1)) {
+              child1.map(i => this.state.aacompanyLayer.removeFeature(i))
+            }
+            const newAacompanyLayer = assoc(['children'], childs1, this.state.aacompanyLayer)
+            return {
+              aacompanyLayer: newAacompanyLayer,
+            }
+          })
+          return false
+        }
+        // 移动到分行
+        this.move(point)
+        const data = {
+          belongNo: code,
+        }
+        this.areaPoint(data, 'aacompanyLayer', name, code)
 
       }
 
@@ -269,7 +283,7 @@ class Map extends Component {
   }
 
   initMap() {
-    const { backgroundImg, providerImg, areaPointLayerArr } = this.state
+    const { backgroundImg, providerImg } = this.state
     const maskColor = new window.LongMap.Color('#072058', 0.5)
     // 初始化地图
     this.map = new window.LongMap('container')
@@ -301,7 +315,6 @@ class Map extends Component {
       // 管辖行
       const governingLayer = new window.LongMap.Layer()
       this.map.addLayer(governingLayer)
-
       // 同业
       const aacompanyLayer = new window.LongMap.Layer()
       this.map.addLayer(aacompanyLayer)
@@ -346,7 +359,7 @@ class Map extends Component {
             areaNo: areaCode,
             belongNo: 'boc',
           }
-          this.areaPoint(data, 'areaPointLayer', name, 'areaPointLayerArr', areaCode)
+          this.areaPoint(data, 'areaPointLayer', name, areaCode)
           // 进行移动
           this.map.flyTo({
             point,
@@ -368,14 +381,18 @@ class Map extends Component {
       this.map.addEventListener('click', (event) => {
         const features = event.features[0]
         if (!features) return
-        if (!features.code) return
-        const clickCode = features.code
+        if (!features.orgNo) return
+        const clickCode = features.orgNo
         this.setState((prevState) => {
           return {
             clickCode,
           }
         })
       })
+      // 监听缩放
+      // this.map.addEventListener('wheel', (event) => {
+      //   console.log(this.map.camera._positionCartographic.height)
+      // })
 
     })
 
@@ -398,6 +415,7 @@ class Map extends Component {
             this.map.removeLayer(prevState.boundaryLayer)
             this.map.removeLayer(prevState.areaPointLayer)
             this.map.removeLayer(prevState.governingLayer)
+            this.map.removeLayer(prevState.aacompanyLayer)
             //区边界图层
             const boundaryLayer = new window.LongMap.Layer()
             this.map.addLayer(boundaryLayer)
@@ -481,7 +499,8 @@ class Map extends Component {
   }
 
   // 区域对应银行点
-  async areaPoint(data, sateLayer, name, layerArr, areaCode) {
+  async areaPoint(data, sateLayer, name, areaCode) {
+    console.log('areaPoint', name, 'areaCode', areaCode)
     const res = await postPointOrgInfo(data)
     console.log(res)
     const index = findIndex(propEq('code', areaCode))(this.state[sateLayer].children)
@@ -491,7 +510,7 @@ class Map extends Component {
       res.map((item, index) => {
         const { orgName, orgNo, belongNo, lon, lat } = item
         let sprite = this.addSprite({
-          url: `http://wechat.bluehy.com/img/${ belongNo }.png`,
+          url: require(`./img/${ belongNo }.png`),
           position: new window.LongMap.Point3(lon, lat, 0),
           scale: 0.3,
           offset: {
@@ -499,8 +518,7 @@ class Map extends Component {
             y: -10,
           },
         }, sateLayer)
-        // sprite.object._billboards[0].distanceDisplayCondition = new window.Cesium.DistanceDisplayCondition(
-        //   10.0, 25000.0)
+        sprite.object._billboards[0].distanceDisplayCondition = new window.Cesium.DistanceDisplayCondition(10.0, 31788.0)
 
         sprite.orgName = orgName
         sprite.orgNo = orgNo
@@ -519,8 +537,11 @@ class Map extends Component {
         }
 
         let text = this.addText(textData, sateLayer)
+        text.orgName = orgName
+        text.orgNo = orgNo
+        text.belongNo = belongNo
         text.code = areaCode
-        // text.object._labels[0].distanceDisplayCondition=new window.Cesium.DistanceDisplayCondition(10.0, 25000.0);
+        text.object._labels[0].distanceDisplayCondition = new window.Cesium.DistanceDisplayCondition(10.0, 31788.0)
       })
     }
   }
@@ -558,7 +579,7 @@ class Map extends Component {
   move(point) {
     this.map.flyTo({
       //位置
-      point: new window.LongMap.Point3(...point, 19032),
+      point: new window.LongMap.Point3(...point, 21544),
       //完成回调
       complete: () => {
         //设置地图可以操作

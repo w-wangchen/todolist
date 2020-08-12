@@ -54,6 +54,8 @@ class Map extends Component {
       areaLayer: '',
       boundaryLayer: '',// 边界图层
       areaPointLayer: '',// 区域点和文字图层
+      governingLayer: '',// 管辖行
+      aacompanyLayer: '',// 同业
       clickCode: '',// 获取地图上的机构号
     }
     this.handleToggleTab = this.handleToggleTab.bind(this)
@@ -77,13 +79,14 @@ class Map extends Component {
   }
 
   handleBackMap() {
-    console.log('back')
     const { center } = this.state
     this.resetScene(center, 2, 'back')
 
   }
 
   handleClickItem(params) {
+    console.log('click', params)
+    this.state.areaLayer.hide()
     const onclick = pathOr(false, ['onclick'], params) ? false : true
     const obj = assoc('onclick', onclick, params)
     const stateName = pathOr('', ['stateName'], params)
@@ -99,15 +102,14 @@ class Map extends Component {
       const lon = +pathOr(114.161116, ['lon'], params)
       const lat = +pathOr(22.582173, ['lat'], params)
       const name = pathOr('罗湖区', ['name'], params)
+      const areaName = pathOr('罗湖区', ['areaName'], params)
       const point = [lon, lat]
       // 行政区
       if (equals(stateName, 'pannelAreas')) {
 
         const AreasState = this.state.pannelAreas
         const item = find((i) => i.code === code)(AreasState)
-
         if (!item.onclick) {
-
           this.setState((prevState) => {
             const child = filter(propEq('code', code))(prevState.boundaryLayer.children)
             const childs = reject(propEq('code', code))(prevState.boundaryLayer.children)
@@ -140,12 +142,48 @@ class Map extends Component {
       }
       // 管辖行
       if (equals(stateName, 'pannelGovernings')) {
+        const pannelState = this.state.pannelGovernings
+        const item = find((i) => i.code === code)(pannelState)
+        console.log('item', item)
+        if (!item.onclick) {
+          this.setState((prevState) => {
+            const child = filter(propEq('code', code))(prevState.boundaryLayer.children)
+            const childs = reject(propEq('code', code))(prevState.boundaryLayer.children)
+            const child1 = filter(propEq('code', code))(prevState.governingLayer.children)
+            const childs1 = reject(propEq('code', code))(prevState.governingLayer.children)
+            if (!isEmpty(child)) {
+              prevState.boundaryLayer.removeFeature(child[0])
+            }
+            if (!isEmpty(child1)) {
+              child1.map(i => this.state.governingLayer.removeFeature(i))
+            }
+            const newBoundaryLayer = assoc(['children'], childs, this.state.boundaryLayer)
+            const newGoverningLayer = assoc(['children'], childs1, this.state.governingLayer)
+            return {
+              boundaryLayer: newBoundaryLayer,
+              governingLayer: newGoverningLayer,
+            }
+          })
+          return false
+        }
         // 移动该管辖行
         this.move(point)
         // 添加管辖行区域点
+        this.addBorder(areaName, code)
+        // 绘制管辖行和图标
+        const data = {
+          orgNo: code,
+          belongNo: 'boc',
+        }
+        this.areaPoint(data, 'governingLayer', name, 'governingLayerArr', code)
+      }
+      if (equals(stateName, 'pannelAacompanys')) {
+        const aacompanyState = this.state.pannelAacompanys
+        const item = find((i) => i.code === code)(aacompanyState)
+        console.log('item', item)
+
 
       }
-
 
     })
 
@@ -260,23 +298,30 @@ class Map extends Component {
       // 区域中国银行图层
       const areaPointLayer = new window.LongMap.Layer()
       this.map.addLayer(areaPointLayer)
+      // 管辖行
+      const governingLayer = new window.LongMap.Layer()
+      this.map.addLayer(governingLayer)
+
+      // 同业
+      const aacompanyLayer = new window.LongMap.Layer()
+      this.map.addLayer(aacompanyLayer)
+
       return {
         center,
         areaLayer,
         boundaryLayer,
         areaPointLayer,
+        governingLayer,
+        aacompanyLayer,
       }
     }, () => {
 
-      console.log('success', this.state.areaPointLayer)
-
       this.resetScene(center, duration)
-      console.log('success1', this.state.areaPointLayer)
       // 场景添加区域信息
       this.sceneAddInfo('areaLayer')
-      console.log('success2', this.state.areaPointLayer)
 
       this.map.addEventListener('click', (event) => {
+
         const features = event.features[0]
         if (!features) return
         if (!features.msg) return
@@ -318,24 +363,7 @@ class Map extends Component {
           })
         })
 
-
-        // code 对应看板
-        // this.setState((prevState) => {
-        //   const stateData = prevState['pannelAreas']
-        //   const index = findIndex(propEq('code', areaCode))(stateData)
-        //   const data = assocPath([index, 'onclick'], true, stateData)
-        //   return {
-        //     pannelAreas: data,
-        //   }
-        // }, () => {
-
-        //   })
-        //
-        // })
-
-
       })
-
       // 点击获取机构号
       this.map.addEventListener('click', (event) => {
         const features = event.features[0]
@@ -348,7 +376,6 @@ class Map extends Component {
           }
         })
       })
-
 
     })
 
@@ -367,32 +394,36 @@ class Map extends Component {
         this.map.setSceneState(false)
 
         if (type === 'back') {
-
           this.setState((prevState) => {
             this.map.removeLayer(prevState.boundaryLayer)
+            this.map.removeLayer(prevState.areaPointLayer)
+            this.map.removeLayer(prevState.governingLayer)
+            //区边界图层
+            const boundaryLayer = new window.LongMap.Layer()
+            this.map.addLayer(boundaryLayer)
+            // 区域中国银行图层
+            const areaPointLayer = new window.LongMap.Layer()
+            this.map.addLayer(areaPointLayer)
+            // 管辖行
+            const governingLayer = new window.LongMap.Layer()
+            this.map.addLayer(governingLayer)
+            // 同业
+            const aacompanyLayer = new window.LongMap.Layer()
+            this.map.addLayer(aacompanyLayer)
             return {
               pannelAreas: AreasData,
               pannelGovernings: prevState.constPannelGovernings,
               pannelAacompanys: AacompanysData,
               pannelBusiness: BusinessData,
-              boundaryLayer: new window.LongMap.Layer(),
-              areaPointLayer: new window.LongMap.Layer(),
+              boundaryLayer,
+              areaPointLayer,
+              governingLayer,
+              aacompanyLayer,
             }
           }, () => {
             this.initScene.show()
-            // const { areaPointLayerArr, aacompanyLayerArr, governingLayerArr } = this.state
-            // console.log('areaPointLayerArr:', areaPointLayerArr)
-            // areaPointLayerArr.forEach(i => {
-            //   this.map.removeLayer(i.layer)
-            // })
-            // aacompanyLayerArr.forEach(i => this.map.removeLayer(i.layer))
-            // governingLayerArr.forEach(i => this.map.removeLayer(i.layer))
-            // console.log('this.boundaryLayer', this.boundaryLayer)
-            // console.log('this.areaPointLayer', this.areaPointLayer)
-            // this.areaLayer.show()
-            // // this.boundaryLayer.children.forEach(i=> )
-            // this.areaPointLayer.hide()
-            //
+            // 场景添加区域信息
+            this.state.areaLayer.show()
           })
 
         }
@@ -452,9 +483,11 @@ class Map extends Component {
   // 区域对应银行点
   async areaPoint(data, sateLayer, name, layerArr, areaCode) {
     const res = await postPointOrgInfo(data)
-    const index = findIndex(propEq('code', areaCode))(this.state.areaPointLayer.children)
-    console.log(index)
-    if (index === -1)
+    console.log(res)
+    const index = findIndex(propEq('code', areaCode))(this.state[sateLayer].children)
+    console.log('areaCode', areaCode, typeof index, index)
+    if (index === -1) {
+      console.log(123)
       res.map((item, index) => {
         const { orgName, orgNo, belongNo, lon, lat } = item
         let sprite = this.addSprite({
@@ -489,7 +522,7 @@ class Map extends Component {
         text.code = areaCode
         // text.object._labels[0].distanceDisplayCondition=new window.Cesium.DistanceDisplayCondition(10.0, 25000.0);
       })
-
+    }
   }
 
   async addBorder(name, code) {
@@ -535,11 +568,7 @@ class Map extends Component {
         //隐藏初始化元素
         if (this.initScene) this.initScene.hide()
         //隐藏区域名称
-        if (this.areaLayer) this.areaLayer.hide()
-        //显示银行图标点
-        if (this.bankLayer) this.bankLayer.show()
-        //隐藏区域边界
-        if (this.boundaryLayer) this.boundaryLayer.show()
+        if (this.state.areaLayer) this.state.areaLayer.hide()
       },
     })
   }
